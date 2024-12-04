@@ -22,17 +22,17 @@ def predict_malaria(img):
     return pred_class, pred_prob
 
 def predict_pneumonia(img):
-    img = img.convert('L')
-    img = img.resize((36,36))
+    img = img.resize((36, 36))  # Redimensiona a imagem
     img = np.asarray(img)
-    img = img.reshape((1,36,36,1))
-    img = img / 255.0
+    if img.ndim == 2:  # Se a imagem for em tons de cinza
+        img = np.stack([img] * 3, axis=-1)  # Converte para 3 canais
+    img = img.reshape((1, 36, 36, 3))  # Ajusta o formato da entrada
+    img = img / 255.0  # Normaliza os valores
     model = load_model("pneumonia.h5")
     pred_probs = model.predict(img)[0]
     pred_class = np.argmax(pred_probs)
     pred_prob = pred_probs[pred_class]
     return pred_class, pred_prob
-
 
 with open('diabetes_model.sav', 'rb') as file:
     diabetes_model = pickle.load(file)
