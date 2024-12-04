@@ -1,182 +1,221 @@
-import gradio as gr
+import streamlit as st
 import numpy as np
 from PIL import Image
 from keras.models import load_model
+import pandas as pd
+from sklearn.ensemble._forest import ForestClassifier, ForestRegressor
 import pickle
-
 from PIL import Image
-import numpy as np
-from tensorflow.keras.models import load_model
+import tensorflow as tf
+from streamlit_option_menu import option_menu
+import os
 
-# Função de previsão de pneumonia
-def predict_pneumonia(img):
-    # Converte o array numpy para uma imagem PIL
-    img = Image.fromarray(np.uint8(img))  
-    
-    # Converte para escala de cinza (L) e redimensiona para o tamanho esperado pelo modelo (36x36)
-    img = img.convert('L').resize((36, 36))  
-    
-    # Converte a imagem novamente para um array numpy e adiciona a dimensão do canal
-    img = np.expand_dims(np.asarray(img), axis=-1)  # (36, 36, 1)
-    
-    # Adiciona a dimensão do batch
-    img = img.reshape((1,36,36,1))
-    
-    # Normaliza a imagem para valores entre 0 e 1
-    img = img / 255.0  
-    
-    # Carrega o modelo
-    model = load_model("pneumonia.h5")
-    
-    # Visualize a arquitetura do modelo
-    model.summary()
-
-    # Faz a previsão
-    pred_probs = model.predict(img)[0]
-    pred_class = np.argmax(pred_probs)  # Obtém a classe com maior probabilidade
-    pred_prob = pred_probs[pred_class]  # Obtém a probabilidade da classe
-
-    # Determina a classe com base na previsão
-    if pred_class == 1:
-        pred_label = "Pneumonia"
-    else:
-        pred_label = "Saudável"
-
-    return pred_label, pred_prob
-
-
-
-# Função de previsão de malária
 def predict_malaria(img):
-    # Certifique-se de que img é um array numpy (se já for, ignora a conversão)
-    img = Image.fromarray(img.astype(np.uint8))  # Converte de numpy para PIL Image
-    img = img.convert('RGB')  # Converte para 3 canais (RGB)
-    img = img.resize((36, 36))  # Redimensiona a imagem
-    img = np.asarray(img)  # Converte para um array numpy
-    img = img.reshape((1, 36, 36, 3))  # Ajusta a forma da imagem
-    img = img.astype(np.float64)  # Certifica-se de que o tipo de dado é float64
-    img = img / 255.0  # Normaliza a imagem
+    img = img.resize((36,36))
+    img = np.asarray(img)
+    img = img.reshape((1,36,36,3))
+    img = img.astype(np.float64)
+    model = load_model("malaria.h5")
+    pred_probs = model.predict(img)[0]
+    pred_class = np.argmax(pred_probs)
+    pred_prob = pred_probs[pred_class]
+    return pred_class, pred_prob
 
-    model = load_model("malaria.h5")  # Carrega o modelo
-    pred_probs = model.predict(img)[0]  # Faz a previsão
-    pred_class = np.argmax(pred_probs)  # Obtém a classe com maior probabilidade
-    pred_prob = pred_probs[pred_class]  # Obtém a probabilidade da classe
+def predict_pneumonia(img):
+    img = img.convert('L')
+    img = img.resize((36,36))
+    img = np.asarray(img)
+    img = img.reshape((1,36,36,1))
+    img = img / 255.0
+    model = load_model("pneumonia.h5")
+    pred_probs = model.predict(img)[0]
+    pred_class = np.argmax(pred_probs)
+    pred_prob = pred_probs[pred_class]
+    return pred_class, pred_prob
 
-    if pred_class == 1:
-        pred_label = "Infectado"
-    else:
-        pred_label = "Não está infectado"
 
-    return pred_label, pred_prob
-
-
-with open('diabetes_model.sav', 'rb') as file:
+with open('/Users/thanizeassuncaorodrigues/Documents/GitHub/DiagnoSys/ComparacaoFrameworks/Comparacao/Streamlit /diabetes_model.sav', 'rb') as file:
     diabetes_model = pickle.load(file)
 
-# Função de previsão de diabetes
-def predict_diabetes(Pregnancies, Glucose, BloodPressure, SkinThickness, Insulin, BMI, DiabetesPedigreeFunction, Age):
-    user_input = [Pregnancies, Glucose, BloodPressure, SkinThickness, Insulin, BMI, DiabetesPedigreeFunction, Age]
-    user_input = [float(x) for x in user_input]
-    diab_prediction = diabetes_model.predict([user_input])
-    if diab_prediction[0] == 1:
-        diab_diagnosis = 'A pessoa é diabética'
-    else:
-        diab_diagnosis = 'A pessoa não é diabética'
-    return diab_diagnosis
+#logo = Image.open("/Users/thanizeassuncaorodrigues/Documents/GitHub/DiagnoSys/logo/MediScan.png")
+# Criação de uma sidebar personalizada com ícones redondos
+#st.sidebar.image(logo, use_column_width=True)
+st.sidebar.title("Menu")
 
-# Função para exibir a página de Datasets Disponíveis
-def display_datasets():
-    datasets = {
-        "Dataset de Malária": "https://www.kaggle.com/datasets/iarunava/cell-images-for-detecting-malaria",
-        "Dataset de Pneumonia": "https://www.kaggle.com/datasets/paultimothymooney/chest-xray-pneumonia",
-        "Dataset de Doenças Cardíacas": "https://github.com/siddhardhan23/multiple-disease-prediction-streamlit-app/blob/main/dataset/heart.csv",
-        "Dataset de Doenças Renais": "https://www.kaggle.com/datasets/mansoordaku/ckdisease",
-        "Dataset de Diabetes": "https://github.com/siddhardhan23/multiple-disease-prediction-streamlit-app/blob/main/dataset/diabetes.csv",
-        "Dataset de Doenças Hepáticas": "https://www.kaggle.com/datasets/uciml/indian-liver-patient-records",
-        "Dataset de Câncer de Mama": "https://www.kaggle.com/datasets/uciml/breast-cancer-wisconsin-data"
-    }
-
-    markdown_content = "# Datasets Disponíveis\n\n"
-    markdown_content += "Esta página contém links para download e visualização de datasets utilizados na aplicação.\n\n"
-    
-    for dataset_name, dataset_url in datasets.items():
-        markdown_content += f"**{dataset_name}:** [Download {dataset_name}]({dataset_url})\n\n"
-    
-    return markdown_content
-
-# Criar a interface Gradio com guias (Tabs)
-tabbed_interface = gr.TabbedInterface(
-    [
-        # Guia 1: Página Inicial
-        gr.Interface(
-            fn=lambda: """
-                # Bem-vindo à Aplicação de Previsão de Anomalias Médicas
-                Este é um projeto de previsão de diversas anomalias médicas usando modelos de deep learning e machine learning.
-                É importante observar que os modelos utilizados nesta aplicação foram obtidos de repositórios públicos na internet e, portanto, sua confiabilidade pode variar.
-                Embora tenham sido treinados em grandes conjuntos de dados médicos, é fundamental lembrar que todas as previsões devem ser verificadas por profissionais de saúde qualificados.
-                ## Perguntas Frequentes
-                ### Como a previsão de anomalias é feita?
-                A detecção de pneumonia e malária é feita usando uma rede neural convolucional (CNN), enquanto a seção de diabetes é detectada por um modelo Random Forest.
-                ### Os modelos são precisos?
-                Os modelos foram treinados em grandes conjuntos de dados médicos, mas lembre-se de que todas as previsões devem ser verificadas por profissionais de saúde qualificados.
-                ### Qual é o propósito desta aplicação?
-                Esta aplicação foi desenvolvida para auxiliar na detecção de diversas anomalias médicas em imagens de diferentes partes do corpo.
-                ### Quais tipos de anomalias médicas podem ser detectadas?
-                Os modelos podem detectar várias anomalias, incluindo pneumonia, malária e diabetes.
-            """,
-            inputs=[],
-            outputs="markdown",
-            title="Página Inicial",
-            description="Página inicial da aplicação de previsão de anomalias médicas."
-        ),
-        
-        # Guia 2: Previsão de Pneumonia
-        gr.Interface(
-            predict_pneumonia,
-            inputs=gr.Image(label="Imagem para Predição de Pneumonia"),
-            outputs=["text", "text"],
-            title="Previsão de Pneumonia",
-            description="Faça o upload de uma imagem para prever se há pneumonia."
-        ),
-        
-        # Guia 3: Previsão de Malária
-        gr.Interface(
-            predict_malaria,
-            inputs=gr.Image(label="Imagem para Predição de Malária"),
-            outputs=["text", "text"],
-            title="Previsão de Malária",
-            description="Faça o upload de uma imagem para prever se há malária."
-        ),
-
-        # Guia 4: Previsão de Diabetes
-        gr.Interface(
-            predict_diabetes,
-            inputs=[
-                gr.Textbox(label="Número de Gestações"),
-                gr.Textbox(label="Nível de Glicose"),
-                gr.Textbox(label="Valor da Pressão Arterial"),
-                gr.Textbox(label="Valor da Espessura da Pele"),
-                gr.Textbox(label="Nível de Insulina"),
-                gr.Textbox(label="Valor do IMC"),
-                gr.Textbox(label="Valor da Função de Pedigree de Diabetes"),
-                gr.Textbox(label="Idade da Pessoa")
-            ],
-            outputs="text",
-            title="Previsão de Diabetes",
-            description="Insira os dados do paciente para prever se ele tem diabetes."
-        ),
-        
-        # Guia 5: Datasets Disponíveis
-        gr.Interface(
-            fn=display_datasets,
-            inputs=[],
-            outputs="markdown",
-            title="Datasets Disponíveis",
-            description="Esta página contém links para download e visualização de datasets utilizados na aplicação."
-        )
-    ],
-    tab_names=["Página Inicial", "Previsão de Pneumonia", "Previsão de Malária", "Previsão de Diabetes", "Datasets Disponíveis"]
+menu = st.sidebar.radio(
+    "Navegação",
+    ["🏠 Página Inicial", "🦟 Detecção Malaria", " 🫁 Detecção Pneumonia", "💉 Detecção Diabetes", "📊 Datasets Disponíveis"]
 )
+# Função para mapear seleção de menu para página correspondente
+def get_selected_page(menu):
+    if menu == "🏠 Página Inicial":
+        return "home"
+    elif menu == "🦟 Detecção Malaria":
+        return "Malaria"
+    elif menu == " 🫁 Detecção Pneumonia":
+        return "Pneumonia"
+    elif menu == "💉 Detecção Diabetes":
+        return "Diabetes"
+    elif menu == "📊 Datasets Disponíveis":
+        return "Datasets"
+    
+selected_page = get_selected_page(menu)
 
-# Lançar a interface com guias
-tabbed_interface.launch()
+
+def main(selected_page):
+    # Conteúdo da página selecionada
+    if selected_page == "home":
+        st.title('Bem-vindo à Aplicação de Previsão de Anomalias Médicas')
+        st.write("Este é um projeto de previsão de diversas anomalias médicas usando modelos de deep learning e machine learning.")
+
+        st.write("É importante observar que os modelos utilizados nesta aplicação foram obtidos de repositórios públicos na internet e, portanto, sua confiabilidade pode variar.")
+
+        st.write("Embora tenham sido treinados em grandes conjuntos de dados médicos, é fundamental lembrar que todas as previsões devem ser verificadas por profissionais de saúde qualificados.")
+
+        # Seção de Perguntas Frequentes
+        st.subheader("Perguntas Frequentes")
+
+        # Lista de perguntas frequentes e respostas
+        faq = [
+            {
+                "pergunta": "Como a previsão de anomalias é feita?",
+                "resposta": "A detecção de pneumonia e malária é feita usando uma rede neural convolucional (CNN), enquanto a seção de diabetes é detectada por um modelo Random Forest",
+            },
+            {
+                "pergunta": "Os modelos são precisos?",
+                "resposta": "Os modelos foram treinados em grandes conjuntos de dados médicos, mas lembre-se de que todas as previsões devem ser verificadas por profissionais de saúde qualificados.",
+            },
+            {
+                "pergunta": "Qual é o propósito desta aplicação?",
+                "resposta": "Esta aplicação foi desenvolvida para auxiliar na detecção de diversas anomalias médicas em imagens de diferentes partes do corpo.",
+            },
+            {
+                "pergunta": "Quais tipos de anomalias médicas podem ser detectadas?",
+                "resposta": "Os modelos podem detectar várias anomalias, incluindo pneumonia, malária e diabetes.",
+            },
+            
+        ]
+
+        # Exibição das perguntas frequentes
+        for item in faq:
+            with st.expander(item["pergunta"]):
+                st.write(item["resposta"])
+
+
+    elif selected_page ==  "Malaria":
+        st.header("Previsão de Malária")
+        uploaded_file = st.file_uploader("Faça o upload de uma imagem para previsão de malária", type=["jpg", "jpeg", "png"])
+        
+        if uploaded_file is not None:
+            try:
+                img = Image.open(uploaded_file)
+                st.image(img, caption="Imagem enviada", use_column_width=True)
+                pred_class, pred_prob = predict_malaria(img)
+                
+                if pred_class == 1:
+                    st.write("Previsão: Infectado")
+                    st.write(f"Probabilidade de Malária: {pred_prob * 100:.2f}%")
+                else:
+                    st.write("Previsão: Não está infectado")
+                    st.write(f"Probabilidade de Saúde: {pred_prob * 100:.2f}%")
+                    
+            except Exception as e:
+                st.error(f"Erro ao prever Malária: {str(e)}")
+
+    elif selected_page ==  "Pneumonia":
+        st.header("Previsão de Pneumonia")
+        uploaded_file = st.file_uploader("Faça o upload de uma imagem para previsão de pneumonia", type=["jpg", "jpeg", "png"])
+        
+        if uploaded_file is not None:
+            try:
+                img = Image.open(uploaded_file)
+                st.image(img, caption="Imagem enviada", use_column_width=True)
+                pred_class, pred_prob = predict_pneumonia(img)
+                
+                if pred_class == 1:
+                    st.write("Previsão: Pneumonia")
+                    st.write(f"Probabilidade de Pneumonia: {pred_prob * 100:.2f}%")
+                else:
+                    st.write("Previsão: Saudável")
+                    st.write(f"Probabilidade de Saúde: {pred_prob * 100:.2f}%")
+                    
+            except Exception as e:
+                st.error(f"Erro ao prever Pneumonia: {str(e)}")
+
+    elif selected_page ==  "Diabetes":
+        # Título da página
+        st.title('Previsão de Diabetes')
+
+        # obtendo os dados de entrada do usuário
+        col1, col2, col3 = st.columns(3)
+
+        with col1:
+            Pregnancies = st.text_input('Número de Gestações')
+
+        with col2:
+            Glucose = st.text_input('Nível de Glicose')
+
+        with col3:
+            BloodPressure = st.text_input('Valor da Pressão Arterial')
+
+        with col1:
+            SkinThickness = st.text_input('Valor da Espessura da Pele')
+
+        with col2:
+            Insulin = st.text_input('Nível de Insulina')
+
+        with col3:
+            BMI = st.text_input('Valor do IMC')
+
+        with col1:
+            DiabetesPedigreeFunction = st.text_input('Valor da Função de Pedigree de Diabetes')
+
+        with col2:
+            Age = st.text_input('Idade da Pessoa')
+
+
+        # código para previsão
+        diab_diagnosis = ''
+
+        # criando um botão para previsão
+
+        if st.button('Resultado do Teste de Diabetes'):
+
+            user_input = [Pregnancies, Glucose, BloodPressure, SkinThickness, Insulin,
+                        BMI, DiabetesPedigreeFunction, Age]
+
+            user_input = [float(x) for x in user_input]
+
+            diab_prediction = diabetes_model.predict([user_input])
+
+            if diab_prediction[0] == 1:
+                diab_diagnosis = 'A pessoa é diabética'
+            else:
+                diab_diagnosis = 'A pessoa não é diabética'
+
+        st.success(diab_diagnosis)
+
+    elif selected_page == "Datasets":
+        # Título da página
+        st.title('Datasets Disponíveis')
+        # Introdução
+        st.write("Esta página contém links para download e visualização de datasets utilizados na aplicação.")
+        
+        # Dicionário com URLs dos datasets
+        datasets = {
+            "Dataset de Malária": "https://www.kaggle.com/datasets/iarunava/cell-images-for-detecting-malaria",
+            "Dataset de Pneumonia": "https://www.kaggle.com/datasets/paultimothymooney/chest-xray-pneumonia",
+            "Dataset de Doenças Cardíacas": "https://github.com/siddhardhan23/multiple-disease-prediction-streamlit-app/blob/main/dataset/heart.csv",
+            "Dataset de Doenças Renais": "https://www.kaggle.com/datasets/mansoordaku/ckdisease",
+            "Dataset de Diabetes": "https://github.com/siddhardhan23/multiple-disease-prediction-streamlit-app/blob/main/dataset/diabetes.csv",
+            "Dataset de Doenças Hepáticas": "https://www.kaggle.com/datasets/uciml/indian-liver-patient-records",
+            "Dataset de Câncer de Mama": "https://www.kaggle.com/datasets/uciml/breast-cancer-wisconsin-data"
+        }
+
+        # Loop sobre os datasets para exibir links de download e botões para visualização
+        for dataset_name, dataset_url in datasets.items():
+            st.write(f"**{dataset_name}:**")
+            st.markdown(f"[Download {dataset_name}]({dataset_url})")
+
+if __name__ == "__main__":
+    main(selected_page)
