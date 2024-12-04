@@ -109,7 +109,7 @@ def main(selected_page):
         if uploaded_file is not None:
             try:
                 img = Image.open(uploaded_file)
-                st.image(img, caption="Imagem enviada", use_column_width=True)
+                st.image(img, caption="Imagem enviada", use_container_width=True)
                 pred_class, pred_prob = predict_malaria(img)
                 
                 if pred_class == 1:
@@ -129,7 +129,7 @@ def main(selected_page):
         if uploaded_file is not None:
             try:
                 img = Image.open(uploaded_file)
-                st.image(img, caption="Imagem enviada", use_column_width=True)
+                st.image(img, caption="Imagem enviada", use_container_width=True)
                 pred_class, pred_prob = predict_pneumonia(img)
                 
                 if pred_class == 1:
