@@ -1,0 +1,8 @@
+streamlit  # Versão atual ou mais recente
+numpy      # Garantir compatibilidade com TensorFlow e Keras
+pillow     # Para manipulação de imagens com PIL
+tensorflow  # Versão compatível com seu código
+keras      # Geralmente acompanha a mesma versão do TensorFlow
+scikit-learn  # Para uso de ForestClassifier e ForestRegressor
+streamlit-option-menu  # Para o menu personalizado
+
