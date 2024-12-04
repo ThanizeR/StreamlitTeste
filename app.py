@@ -29,8 +29,8 @@ def predict_pneumonia(img):
     img = img.resize((36, 36))
     
     # Convertendo para numpy array e ajustando dimensões
-    img = np.asarray(img, dtype=np.float32)  # Garante o tipo float32
-    img = img.reshape((1, 36, 36, 1))       # Adiciona batch dimension e canal
+    img = np.asarray(img, dtype=np.float32)
+    img = img.reshape((1, 36, 36, 1))  # Adiciona batch dimension e canal
     
     # Normalizando para escala [0, 1]
     img = img / 255.0
@@ -38,12 +38,15 @@ def predict_pneumonia(img):
     # Carregando o modelo
     model = load_model("pneumonia.h5")
     
+    # Verificar dimensões esperadas
+    if model.input_shape[1:] != (36, 36, 1):
+        raise ValueError(f"O modelo espera entradas no formato {model.input_shape}, mas recebeu (36, 36, 1).")
+    
     # Realizando a previsão
-    pred_probs = model.predict(img)[0]
+    pred_probs = model.predict(img, verbose=0)[0]
     pred_class = np.argmax(pred_probs)
     pred_prob = pred_probs[pred_class]
     return pred_class, pred_prob
-
 
 with open('diabetes_model.sav', 'rb') as file:
     diabetes_model = pickle.load(file)
