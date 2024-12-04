@@ -34,7 +34,7 @@ def predict_pneumonia(img):
     return pred_class, pred_prob
 
 
-with open('/Users/thanizeassuncaorodrigues/Documents/GitHub/DiagnoSys/ComparacaoFrameworks/Comparacao/Streamlit /diabetes_model.sav', 'rb') as file:
+with open('diabetes_model.sav', 'rb') as file:
     diabetes_model = pickle.load(file)
 
 #logo = Image.open("/Users/thanizeassuncaorodrigues/Documents/GitHub/DiagnoSys/logo/MediScan.png")
